@@ -1,0 +1,6 @@
+# Binary produced by 'go build' in this folder.
+/shelf
+
+# Test binaries.
+*.test 
+*.out
