@@ -13,6 +13,26 @@ const (
 	Finished
 )
 
+type Book struct {
+	Title  string
+	Author string
+	Pages  int
+	Status Status
+}
+
+type Shelf struct {
+	books []Book
+}
+
+func (s *Shelf) add(b Book) error {
+	if err := validate(b); err != nil {
+		return err
+	}
+
+	s.books = append(s.books, b)
+	return nil
+}
+
 func (s Status) String() string {
 	switch s {
 	case Want:
@@ -24,13 +44,6 @@ func (s Status) String() string {
 	default:
 		return "unknown"
 	}
-}
-
-type Book struct {
-	Title  string
-	Author string
-	Pages  int
-	Status Status
 }
 
 func validate(b Book) error {
@@ -67,20 +80,35 @@ func newBook(title, author string, pages int, status Status) (Book, error) {
 }
 
 func main() {
-	var empty Book
+	var shelf Shelf
 
-	if err := validate(empty); err != nil {
+	if err := shelf.add(Book{}); err != nil {
 		fmt.Println("empty: ", err)
 	}
 
-	if _, err := newBook("Dune", "Frank Herbert", 0, Want); err != nil {
+	dune, err := newBook("Dune", "Frank Herbert", 412, Want)
+	if err != nil {
 		fmt.Println("dune: ", err)
+		return
 	}
 
-	b, err := newBook("The Hobbit", "J.R.R. Tolkien", 310, Reading)
+	if err := shelf.add(dune); err != nil {
+		fmt.Println("add dune: ", err)
+		return
+	}
+
+	hobbit, err := newBook("The Hobbit", "J.R.R. Tolkien", 310, Reading)
 	if err != nil {
 		fmt.Println("hobbit: ", err)
 	}
 
-	fmt.Printf("%s by %s (%d pages) [%s]\n", b.Title, b.Author, b.Pages, b.Status)
+	if err := shelf.add(hobbit); err != nil {
+		fmt.Println("add hobbit: ", err)
+		return
+	}
+
+	fmt.Printf("shelf has %d books\n", len(shelf.books))
+	for i, b := range shelf.books {
+		fmt.Printf("%d %s by %s (%d pages) [%s]\n", i+1, b.Title, b.Author, b.Pages, b.Status)
+	}
 }
