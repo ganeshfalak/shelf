@@ -21,7 +21,8 @@ type Book struct {
 }
 
 type Shelf struct {
-	books []Book
+	books   []Book
+	byTitle map[string]Book
 }
 
 func (s *Shelf) add(b Book) error {
@@ -29,8 +30,22 @@ func (s *Shelf) add(b Book) error {
 		return err
 	}
 
+	if s.byTitle == nil {
+		s.byTitle = make(map[string]Book)
+	}
+
+	if _, exists := s.byTitle[b.Title]; exists {
+		return fmt.Errorf("already on the shelf: %s", b.Title)
+	}
+
 	s.books = append(s.books, b)
+	s.byTitle[b.Title] = b
 	return nil
+}
+
+func (s *Shelf) get(title string) (Book, bool) {
+	b, ok := s.byTitle[title]
+	return b, ok
 }
 
 func (s Status) String() string {
@@ -100,11 +115,24 @@ func main() {
 	hobbit, err := newBook("The Hobbit", "J.R.R. Tolkien", 310, Reading)
 	if err != nil {
 		fmt.Println("hobbit: ", err)
+		return
 	}
 
 	if err := shelf.add(hobbit); err != nil {
 		fmt.Println("add hobbit: ", err)
 		return
+	}
+
+	if err := shelf.add(dune); err != nil {
+		fmt.Println("duplicate: ", err)
+	}
+
+	if b, ok := shelf.get("The Hobbit"); ok {
+		fmt.Printf("found: %s by %s [%s]\n", b.Title, b.Author, b.Status)
+	}
+
+	if _, ok := shelf.get("Neuromancer"); !ok {
+		fmt.Println("missing: Neuromancer")
 	}
 
 	fmt.Printf("shelf has %d books\n", len(shelf.books))
